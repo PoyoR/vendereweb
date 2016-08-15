@@ -1,0 +1,26 @@
+<p>{{ empresa.nombre }}</p>
+<p>{{ empresa.direccion }}</p>
+<p>RFC {{ empresa.rfc }}</p>
+
+<p>- - - - - - - - - - - - - - - - - - </p>
+<p>Fecha: {{ venta.fecha|date:"SHORT_DATE_FORMAT" }}</p>
+<p>Le atendió: {{ venta.cajero.get_full_name }}</p>
+<table>
+	<thead>
+		<tr>Cant.</tr>
+		<tr>Desc.</tr>		
+		<tr>Precio</tr>
+	</thead>	
+	<tbody>
+		{% for producto in productos %}
+			<tr>
+				<td>{{ producto.cantidad }}</td>
+				<td>{{ producto.producto }}</td>				
+				<td>$ {{ producto.producto.precio_venta }}</td>			
+			</tr>
+		{% endfor %}
+	</tbody>	
+</table>
+
+<p>Total: $ {{ venta.total }}</p>
+<p>- - - - - - - - - - - - - - - - - - </p>

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Mejores ventas{% endblock %}
+
+{% block content %}
+
+<ul class="collection with-header">
+	<li class="collection-header"><h4>Mejores ventas</h4></li>
+
+{% for producto in productos %}
+	<li class="collection-item">
+		<p><b>Producto: </b>{{ producto.producto__descripcion }}</p>		
+		<p><b>Cantidad: </b>{{ producto.cantidad__sum }}</p>
+
+		<p class="producto invisible">{{ producto.producto__descripcion }}</p>
+		<p class="cantidad invisible">{{ producto.cantidad__sum }}</p>
+	</li>
+{% endfor %}
+	<li class="collection-item">
+		<div id="chart_div"></div>
+	</li>
+</ul>
+
+
+{% endblock %}
+
+{% block js %}
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+<script type="text/javascript">
+
+	var productos = [];
+	var cantidad = []
+
+	$(document).ready(function(){		
+
+		$(".producto").each(function(index){
+			var producto = $(this).text();
+			productos.push(producto);			
+		});
+
+		$(".cantidad").each(function(index){
+			var cant = $(this).text();
+			cantidad.push(cant);
+		});
+	});
+
+      // Load the Visualization API and the corechart package.
+      google.charts.load('current', {'packages':['corechart']});
+
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.charts.setOnLoadCallback(drawChart);
+
+      // Callback that creates and populates a data table,
+      // instantiates the pie chart, passes in the data and
+      // draws it.
+      function drawChart() {
+
+        // Create the data table.
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Producto');
+        data.addColumn('number', 'Cantidad');
+        data.addRows([
+          ['Mushrooms', 13],
+          ['Onions', 1],
+          ['Olives', 1],
+          ['Zucchini', 1],
+          ['Pepperoni', 2]
+        ]);
+
+        // Set chart options
+        var options = {'title':'How Much Pizza I Ate Last Night',
+                       'width':800,
+                       'height':400};
+
+        // Instantiate and draw our chart, passing in some options.
+        var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+
+{% endblock %}

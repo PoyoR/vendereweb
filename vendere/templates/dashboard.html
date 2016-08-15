@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+	<div class="row">
+		<div class="col s12 m6">
+			<div class="card small">
+				<div class="card-image">
+					<img src="{% static 'img/fondo.jpg' %}">
+					<span class="card-title">Productos mas vendidos</span>
+				</div>
+				<div class="card-content">
+					<p>Lista de sus productos mas vendidos</p>
+				</div>
+				<div class="card-action">
+					<a href="{% url 'mas_vendidos' %}">Ver</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="col s12 m6">
+			<div class="card small">
+				<div class="card-image">
+					<img src="{% static 'img/fondo.jpg' %}">
+					<span class="card-title">Total ventas</span>
+				</div>
+				<div class="card-content">
+					<p>Resumen de sus ventas</p>
+				</div>
+				<div class="card-action">
+					<a href="{% url 'ganancias' %}">Ver</a>
+				</div>
+			</div>
+		</div>
+
+	</div>
+{% endblock %}

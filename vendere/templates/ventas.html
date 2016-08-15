@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Vender{% endblock %}
+
+{% block content %}
+	<div class="row">
+		
+		<div class="col s12 m3 grey lighten-5">
+			<!-- Modal Trigger -->
+
+			<div class="row margen-top-20">
+				<div class="col s12">
+  					<a id="agregar-producto" class="waves-effect waves-light btn modal-trigger z-depth-3 col s12" href="#modal1"><i class="material-icons left">add_shopping_cart</i>Agregar producto </a>
+  				</div>
+  			</div>
+
+  			<div class="row">
+
+	  			<form id="form-vender" class="col s12" action="" method="POST">{% csrf_token %}		  				
+
+	  					{{ form.as_p }}
+
+	  					{{ formset.management_form }}	  					
+	  					<div id="formset">
+	  					</div>		  					
+
+	  			</form>	 
+
+	  			<div class="row">	  						
+	  				<button disabled class="waves-effect waves-light btn col s12" id="terminar-venta"><i class="material-icons left">shopping_cart</i>Finalizar venta</button>
+	  			</div>
+
+	  			<div id="barra-progreso" class="progress invisible">
+      				<div class="indeterminate"></div>
+  				</div>
+
+  			</div>
+
+		</div>
+
+		<div class="col s12 m9">
+				<table id="lista_productos" class="centered bordered">
+					<thead>
+						<tr>
+							<th class="invisible" data-field="ID">ID</th>
+							<th data-field="Codigo">Código</th>				
+							<th data-field="Descripcion">Descripción</th>
+							<th data-field="Precio">Precio</th>
+							<th data-field="Cantidad">Cantidad</th>
+						</tr>
+					</thead>
+
+					<tbody id="tab-body">
+							<tr>
+								<td class="ide_producto invisible"></td>
+								<td class="cod_producto"></td>
+								<td class="des_producto"></td>
+								<td class="pre_producto"></td>
+								<td class="can_producto"></td>
+							</tr>
+					</tbody>
+				</table>
+		</div><!--col s9-->
+	</div>	
+
+	<!-- Modal Structure -->
+	<div id="modal1" class="modal bottom-sheet">
+		<div class="modal-content">
+			<div class="row">
+				<div class="col s12 m3">
+					<form id="form-carrito" class="col s12">
+						<div class="row">
+							<div class="input-field col s12">
+								<i class="material-icons prefix">search</i>
+								<input id="busqueda" type="text" class="validate" autocomplete="off">
+								<label for="busqueda" >Buscar</label>
+							</div>
+
+							<div class="input-field col s12">
+								<i class="material-icons prefix">exposure</i>
+								<input id="cantidad_producto" type="number" value="1">
+								<label for="cantidad_producto">Cantidad</label>
+							</div>							
+						</div>
+					</form>		
+					<button id="agregar" disabled class="waves-effect waves-light btn col s12 z-depth-3"><i class="material-icons left">add_shopping_cart</i>Agregar</button>			
+				</div><!--col s3-->
+				
+				<div class="col s12 m9">
+					<div id="producto">
+						<table id="tabla" class="centered">
+							<thead>
+								<tr>
+									<th class="invisible" data-field="ID">ID</th>
+									<th data-field="Codigo">Código</th>				
+									<th data-field="Descripcion">Descripción</th>
+									<th data-field="Precio">Precio</th>
+								</tr>
+							</thead>
+
+							<tbody id="body_tabla">
+									<tr>
+										<td class="invisible" id="id_producto"></td>
+										<td id="codigo_producto"></td>
+										<td id="descripcion_producto"></td>
+										<td id="precio_producto"></td>
+									</tr>
+							</tbody>
+						</table>
+					</div><!--producto-->
+				</div><!--col s9-->
+			</div><!--Row-->
+		</div><!--modal-content-->		
+
+	</div>
+{% endblock %}
+
+{% block js %}
+
+	<script>
+		$(document).ready(function(){
+			var consulta;
+			productos = new Array(5000);
+			num_productos = 0;
+			total = 0;			
+			var codigo="";
+			cantidad = 0;
+			costo = 0;
+			//$("#busqueda").focus();
+			$("#busqueda").keyup(function(){
+				codigo = $('#codigo_producto').val();
+				if(codigo == ""){
+					$('#agregar').prop("disabled", true);
+				}
+				inicio();
+			});
+			$('.modal-trigger').leanModal();
+			Materialize.updateTextFields();
+						
+			$("#agregar").click(function(){				
+				//e.defaultPrevented();
+				agregar_producto_carrito();
+				$('#agregar').prop("disabled", true);
+			});
+
+			$("#terminar-venta").click(function(){
+				var metodo_pago = $("#id_metodo_pago").val();
+				if (metodo_pago != ""){
+					crear_productos_form();
+				}else{
+					Materialize.toast('Seleccione método de pago', 4000);
+				}
+			});
+
+			$("#form-carrito").submit(function(){
+				//e.defaultPrevented();
+				agregar_producto_carrito();
+			});
+
+			$("#form-carrito").keypress(function(e) {
+				if (e.which == 13) {
+					producto = $('#codigo_producto').text();
+					if (producto != "") {
+            			agregar_producto_carrito();
+            		}else{
+            			return false;
+            		}
+            	}
+        	});
+
+			$("#form-vender").keypress(function(e) {
+				if (e.which == 13) {
+            		return false;
+        		}
+    		});
+
+		});	
+
+		function agregar_producto_carrito(){		
+			productos[num_productos] = ($('#id_total').val());
+			num_productos ++;
+			concatenar();
+			limpiar_controles();
+
+			cantidad = $('#cantidad_producto').val();			
+			total += parseInt(cantidad)*parseInt(costo);
+			$("#id_total").val(total);
+			$('#cantidad_producto').val(1);
+			$('#terminar-venta').prop("disabled", false);
+		}
+
+		var html_productos = "";
+		var cont = 0;		
+
+		function crear_productos_form(){
+			$('#lista_productos tbody tr').each(function (){
+				var id, codigo, descripcion, precio, cantidad;
+
+				$(this).children("td").each(function (index2){					
+
+					switch(index2){
+						case 0:
+							id = $(this).text();
+							break;
+						case 1:
+							codigo = $(this).text();
+							break;
+						case 2:
+							descripcion = $(this).text();
+							break;
+						case 3:
+							precio = $(this).text();
+							break;
+						case 4:
+							cantidad = $(this).text();
+							break;
+					}
+
+				});				
+
+				html_productos += '<input class="invisible" id="id_venta_detalle_set-'+
+					cont+'-producto" name="venta_detalle_set-'+cont+'-producto" type="text" value="'+id+'">'+
+					'<input class="invisible" id="id_venta_detalle_set-'+cont+'-cantidad" name="venta_detalle_set-'+cont+'-cantidad" value="'+cantidad+'">';
+				$('#formset').html(html_productos);
+				cont ++;
+				
+			});			
+				$("#barra-progreso").removeClass("invisible");
+				$("#barra-progreso").addClass("visible");
+				$("#form-vender").submit();			
+		}
+
+		var ide = "";
+		var cod = "";
+		var des = "";
+		var pre = "";
+		var can = "";
+		var html = "";
+		var can_previa = "";
+
+		function concatenar(){
+			ide = $('#id_producto').text();
+			cod = $('#codigo_producto').text();
+			des = $('#descripcion_producto').text();
+			pre = $('#precio_producto').text();
+			can = $('#cantidad_producto').val();
+			
+			if ($("td[id='"+cod+"']").length > 0){
+
+				can_previa = $("td[id='"+cod+"']").text();				
+				var can_nueva = parseInt(can)+parseInt(can_previa)
+				$("td[id='"+cod+"']").html(can_nueva);
+
+			}else{
+				if (html != ""){
+					html = $('#tab-body').html();	
+				}
+				html += '<tr>'+
+						'<td class="invisible">'+ ide +'</td>'+
+						'<td>'+ cod +'</td>'+
+						'<td>'+ des +'</td>'+
+						'<td>'+ pre +'</td>'+
+						'<td id="'+cod+'">'+ can +'</td>'+
+						'</tr>';
+								
+				$('#tab-body').html(html);
+			}
+			cod="";
+			des="";			
+			pre="";			
+		}
+
+		function limpiar_controles(){
+			$('#id_producto').html("");
+			$('#codigo_producto').html("");
+			$('#descripcion_producto').html("");
+			$('#precio_producto').html("");
+            $('#busqueda').val('');
+		}
+
+		/*function enviar_producto() {
+    		$.ajax({
+        		url : "/vender/agregar_producto/", // the endpoint
+        		type : "POST", // http method
+        		data : { 
+        			id_producto : $('#id_producto').val(),
+        			cantidad_productos : num_productos,
+        			csrfmiddlewaretoken : $('input[name=csrfmiddlewaretoken]').val()
+        		},
+        		success : function(json) {
+        			$('#codigo_producto').html("");
+					$('#descripcion_producto').html("");
+					$('#precio_producto').html("");
+            		$('#id_producto').html("");
+            		$('#busqueda').val("");
+        		}
+    		});
+		}*/
+
+		function inicio(){
+			consulta = $("#busqueda").val();
+
+			if (consulta.length > 0){
+
+				$.ajax({
+					data : {'q': consulta},
+					url : '/vender/busqueda_producto/',
+					type: 'GET',
+					success: function(data){
+						
+						var id = "";
+						var codigo ="";
+						var descripcion="";
+						var precio="";
+						var existencia="";
+						for (var i = 0; i < data.length; i++) {
+
+							id = data[i].pk;
+							codigo = data[i].fields.codigo;
+							descripcion = data[i].fields.descripcion;
+							precio = "$ "+data[i].fields.precio_final;
+							costo = data[i].fields.precio_final;
+						}						
+						$('#id_producto').html(id);
+						$('#codigo_producto').html(codigo);
+						$('#descripcion_producto').html(descripcion);
+						$('#precio_producto').html(precio);						
+
+						if(codigo != ""){
+							$('#agregar').prop("disabled", false);
+						}
+					}
+				});
+
+			}
+			else{
+				$('#id_producto').html("");
+				$('#codigo_producto').html("");
+				$('#descripcion_producto').html("");
+				$('#precio_producto').html("");
+				$('#agregar').prop("disabled", true);
+			}
+		}
+
+	</script>
+
+{% endblock %}

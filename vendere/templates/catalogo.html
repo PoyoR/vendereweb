@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Catálogo{% endblock %}
+
+{% block content %}
+
+	<div class="row">
+		<form id="busqueda_catalogo_form" class="col s12">
+			<div class="row">
+				<div class="input-field col s6">
+					<i class="material-icons prefix">search</i>
+					<input id="busqueda" type="text" class="validate">
+					<label for="busqueda" >Buscar</label>
+				</div>
+			</div>
+		</form>
+	</div>
+	
+	<table class="responsive-table bordered">
+		<thead>
+			<tr>
+				<th data-field="Codigo">Código</th>
+				{% if sucursales %}
+					<th data-field="Codigo">Sucursal</th>
+				{% endif %}
+				<th data-field="Descripcion">Descripción</th>				
+				<th data-field="Precio">Precio</th>
+				<th data-field="Cantidad">Cantidad</th>
+			</tr>
+		</thead>
+		<tbody id="body_tabla">
+			{% for producto in productos %}
+				<tr>
+					<td>{{ producto.codigo }}</td>
+					{% if sucursales %}
+						<td>{{ producto.sucursal.nombre }}</td>	
+					{% endif %}
+					<td>{{ producto.descripcion }}</td>					
+					<td>$ {{ producto.precio_venta }}</td>
+					<td>{{ producto.existencia }}</td>
+				</tr>
+			{% empty %}
+	    		<li>No hay artículos</li>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}
+
+{% block js %}
+
+	<script>
+		$(document).ready(function(){
+			var consulta;
+			//$("#busqueda").focus();
+			$("#busqueda").keyup(inicio);
+		});
+
+		function inicio(){
+			consulta = $("#busqueda").val();			
+			
+			$.ajax({
+				data : {'q': consulta},
+				url : '/catalogo/busqueda_ajax/',
+				type: 'GET',
+				success: function(data){
+					
+					var html = "";
+					for (var i = 0; i < data.length; i++) {
+
+						html += '<tr><td>'+data[i].fields.codigo
+								+'</td><td>'+data[i].fields.descripcion
+								+'</td><td>'+data[i].fields.precio_venta
+								+'</td><td>'+data[i].fields.existencia
+								+'</td></tr>';
+					}
+					$('#body_tabla').html(html);
+					
+
+				}
+			});
+		}
+
+		
+
+	</script>
+
+{% endblock %}

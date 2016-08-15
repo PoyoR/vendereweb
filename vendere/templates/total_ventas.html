@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}Mejores ventas{% endblock %}
+
+{% block content %}
+
+<ul class="collection with-header">
+	<li class="collection-header"><h4>Total ventas</h4></li>
+	<li class="collection-item">$ {{ ventas.total__sum }}</li>
+</ul>
+
+<ul class="collection with-header">
+	<li class="collection-header"><h4>Total ventas por sucursal</h4></li>
+	{% for sucursal in ventas_sucursal %}
+		<li class="collection-item">
+			<p><b>Sucursal: </b>{{ sucursal.sucursal__nombre }}</p>
+			<p><b>Total ventas: </b>$ {{ sucursal.total__sum }}</p>
+		</li>
+	{% endfor %}
+</ul>
+
+<ul class="collection with-header">
+	<li class="collection-header"><h4>Total ventas por cajero</h4></li>
+	{% for cajero in ventas_cajero %}
+		<li class="collection-item">
+			<p><b>Cajero: </b>{{ cajero.cajero__username }}</p>
+			<p><b>Total ventas: </b>$ {{ cajero.total__sum }}</p>
+		</li>
+	{% endfor %}
+</ul>
+
+<ul class="collection with-header">
+	<li class="collection-header"><h4>Total ventas por mes</h4></li>
+	{% for venta in ventas_fecha %}
+	<li class="collection-item">{{ venta.mes|date:"M-Y" }} <br> <b>Total de ventas: </b>{{ venta.c }} <br> <b>Total vendido: </b>$ {{ venta.total__sum }}</li>
+	{% endfor %}
+</ul>
+
+{% endblock %}
